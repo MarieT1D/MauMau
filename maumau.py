@@ -63,11 +63,6 @@ class Game(Karte):
                 self.players=players
          
                         
-####Was bedeutet das (s. Schafkopf):
-        """    for j in self.kartensatz[i*8:(i+1)*8]:
-
-                j.move_loc(self.players[i].name)
-                """
 class Player(Game):
     x=iter(list(range(Game.players)))              
     def __init__(self, name):
