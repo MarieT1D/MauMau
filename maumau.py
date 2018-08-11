@@ -44,7 +44,7 @@ def get_zeichen(karte):
     
 
 class Karte():
-    def __init__(self, id):
+    def __init__(self,id):
         
         self.id = id
         self.farbe   = get_farbe(id)
@@ -56,13 +56,12 @@ class Karte():
         self.name    = str(self.farbe)+'_'+str(self.zeichen)
         self.loc     = 'None'
     
-class Game():
+class Game(Karte):
         def __init__(self, players):
                 assert len(players) < 6
                 self.kartensatz=random.shuffle[Karte(i) for i in karten_ids]
                 self.players=players
-                for i in range(4):
-                        self.players[i].handout(self.kartensatz[(i*5): i*5+5])
+         
                         
 ####Was bedeutet das (s. Schafkopf):
         """    for j in self.kartensatz[i*8:(i+1)*8]:
@@ -70,19 +69,10 @@ class Game():
                 j.move_loc(self.players[i].name)
                 """
 class Player(Game):
-        def __init__(name):
+    x=iter(list(range(Game.players)))              
+    def __init__(self, name):
                 self.name=name
-                for i in range(players):
-                        self.id=yield(i)
+                self.id=self.x.__next__()
+                self.handout=Game.kartensatz[(self.id*5):(self.id+1)*5)]
                 
-                
-        
-        
-   #location encoding:
-    #'None' - nicht ausgeteilt
-    #str - name des Spielers
-    #'Stich' - Im aktuellen Stich
-    #'gespielt' - In einem vergangenen Stich
-    def move_loc(self,loc):
-        self.loc = loc
 
