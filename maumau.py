@@ -59,15 +59,15 @@ class Karte():
 class Game(Karte):
         def __init__(self, players):
                 assert len(players) < 6
-                self.kartensatz=random.shuffle[Karte(i) for i in karten_ids]
+                self.kartensatz=random.shuffle([Karte(i) for i in karten_ids])
                 self.players=players
          
                         
 class Player(Game):
-    x=iter(list(range(Game.players)))              
+    x=iter(list(range(Game.players)))
     def __init__(self, name):
                 self.name=name
                 self.id=self.x.__next__()
-                self.handout=Game.kartensatz[(self.id*5):(self.id+1)*5)]
+                self.handout=Game.kartensatz[(self.id*5):(self.id+1)*5]
                 
 
