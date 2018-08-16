@@ -8,14 +8,14 @@ Kartendarstellung
 10      13      23      33      43
 unter   14      24      34      44
 ober    15      25      35      45
-könig   16      26      36      46
+koenig  16      26      36      46
 sau     17      27      37      47
 
 """
 import random
 #Mgliche Farben/Werte
 farbe=("Eichel", "Gras", "Herz", "Schelle")
-wert=("7","8","9","10","Unter","Ober","König","Sau")
+wert=("7","8","9","10","Unter","Ober","Koenig","Sau")
 
 #Darstellung im Bot
 pos_kartenwert_id=[i for i in range(8)]
@@ -56,18 +56,40 @@ class Karte():
         self.name    = str(self.farbe)+'_'+str(self.zeichen)
         self.loc     = 'None'
     
-class Game(Karte):
-        def __init__(self, players):
-                assert len(players) < 6
-                self.kartensatz=random.shuffle([Karte(i) for i in karten_ids])
-                self.players=players
-         
-                        
-class Player(Game):
+class Game():
+        players=4
+        def __init__(self, players=None):
+                assert players < 6
+                self.kartensatz=[Karte(i) for i in karten_ids]
+                random.shuffle(self.kartensatz)
+                self.players=4
+
+                if players == None:
+                    self.players = 4
+                else:
+                    self.players = players
+                             
+class Player():
     x=iter(list(range(Game.players)))
-    def __init__(self, name):
+    def __init__(self, name,game):
                 self.name=name
-                self.id=self.x.__next__()
-                self.handout=Game.kartensatz[(self.id*5):(self.id+1)*5]
-                
+                self.id= next(self.x)
+                self.handout=game.kartensatz[(self.id*5):(self.id+1)*5]
+    def get_kartenname(self):
+        a=[self.handout[i].name for i in range(len(self.handout))]
+        return a
+
+    def get_kartenid(self):
+        a=[self.handout[i].id for i in range(len(self.handout))]
+        return a
+
+class Playerbot(Player):
+    def __init__(self,name,game):
+        Player.__init__(self,name,game)
+
+tgame = Game(4)
+p1=Player("Marie",tgame)
+
+print(p1.get_kartenname(),p1.get_kartenid())
+
 
