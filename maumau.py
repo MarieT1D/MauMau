@@ -31,6 +31,7 @@ pos_kartennamen=dict(zip(karten_ids,[(j+"_"+i)for j in farbe
                        for  i in wert]))
 
 no_players = 4
+no_cards = 5
 
 
 #stellt die farbe einer Karte fest
@@ -61,7 +62,7 @@ class Karte():
 class Game():
         players=4
         def __init__(self,players):
-                assert no_players < 6
+                assert no_players < no_cards*no_players
                 self.kartensatz=[Karte(i) for i in karten_ids]
                 random.shuffle(self.kartensatz)
                # self.players = no_players
@@ -76,9 +77,9 @@ class Game():
                 i.loc = 'gespielt'
 
             for i in range(no_players):
-                for j in range(7):
-                    self.kartensatz[i*7+j].loc = self.players[i].id
-                self.players[i].handout(self.kartensatz[i*7:(i+1)*7])
+                for j in range(no_cards):
+                    self.kartensatz[i*no_cards+j].loc = self.players[i].id
+                self.players[i].handout(self.kartensatz[i*no_cards:(i+1)*no_cards])
 
 
         def check_karten(self):
@@ -92,30 +93,37 @@ class Game():
         def play(self):
 
             es_gibt_einen_gewinner = False
-            gelegt = self.kartensatz[no_players*7:]
+            gelegt = self.kartensatz[no_players*no_cards:]
 
             counter = 0
 
             while not(es_gibt_einen_gewinner):
 
+
+
+                print('runde')
+
                 for i in range(no_players):
+
                     answer = self.players[i].lege(gelegt[-no_players:])
                     if answer != 0:
-                        print(answer.loc)
-                        print(self.players[i].id)
                         assert answer.loc == self.players[i].id     #schaut ob er die Karte hat
                         assert answer.farbe == gelegt[-1].farbe or answer.zeichen == gelegt[-1].zeichen
                         answer.loc = 'gespielt'
                         gelegt.append(answer)
-                    if answer == 0:
+
+
+                    if answer == 0 and len(gelegt)>no_players:
                         j = random.randint(0,len(gelegt)-no_players)
-                        gelegt[j].loc = self.players[j].id
+                        gelegt[j].loc = self.players[i].id
                         self.players[i].nehme(gelegt[j])
                         gelegt.pop(j)
                         answer = self.players[i].lege([gelegt[-1]])
                         if answer !=0:
                             answer.loc = 'gespielt'
                             gelegt.append(answer)
+
+
 
                     self.check_karten()
                     for j in self.players:
@@ -131,14 +139,12 @@ class Game():
                     if es_gibt_einen_gewinner:
                         break
 
+                    if counter >= 10000:
+                        es_gibt_einen_gewinner = True
+
 
             """
-            Regeln:
-            Karte darf nur einmal gespielt werden
-            Stapeln neu und gelegt
-            Welche Karte darf ich spielen
-            Wer keine Karten mehr, hat gewonnen
-            Wenn man nicht legen kann, muss man Karte ziehen
+            TODO:
             besondere Regeln (aussetzen)
             """
 
@@ -152,11 +158,11 @@ class Player():
                 self.id= next(self.x)
 
     def get_kartenname(self):
-        a=[self.handout[i].name for i in range(len(self.handout))]
+        a=[self.karten[i].name for i in range(len(self.karten))]
         return a
 
     def get_kartenid(self):
-        a=[self.handout[i].id for i in range(len(self.handout))]
+        a=[self.karten[i].id for i in range(len(self.karten))]
         return a
 
 
@@ -166,22 +172,28 @@ class Playerbot(Player):
         Player.__init__(self,name)
     def handout(self,karten):
         self.karten = karten
-        for i in self.karten:
-            assert i.loc == self.id
+
+
 
     def lege(self,gelegt):
+
+
+        print([i.farbe for i in self.karten])
+
+
         k=gelegt[-1]
-        f=0
         for i in range(len(self.karten)):                
-            if k.zeichen==self.karten[i].zeichen:
+            if k.farbe==self.karten[i].farbe or k.zeichen == self.karten[i].zeichen:
                 f=self.karten[i]
-            elif k.farbe==self.karten[i].farbe: 
-                f=self.karten[i]
-        return f
+                self.karten.remove(f)
+                return f
+            else:
+                return 0
 
     def nehme(self,a):
         self.karten.append(a)
-        assert self.karten[-1].loc == self.id
+
+
 
 
 
