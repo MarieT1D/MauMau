@@ -68,6 +68,7 @@ class Game():
                # self.players = no_players
                 self.players = players
                 self.player_cards = dict(zip([i.id for i in self.players],[]*no_players))
+                self.reihenfolge = [i  for i in range(no_players)]
 
 
         def reset(self):
@@ -80,6 +81,8 @@ class Game():
                 for j in range(no_cards):
                     self.kartensatz[i*no_cards+j].loc = self.players[i].id
                 self.players[i].handout(self.kartensatz[i*no_cards:(i+1)*no_cards])
+
+            self.reihenfolge = [self.reihenfolge[-1]]+self.reihenfolge[:-1]
 
 
         def check_karten(self):
@@ -97,10 +100,11 @@ class Game():
 
             counter = 0
 
+
             while not(es_gibt_einen_gewinner):
 
 
-                for i in range(no_players):
+                for i in self.reihenfolge:
 
                     answer = self.players[i].lege(gelegt[-no_players:])
                     if answer != 0:
@@ -127,17 +131,23 @@ class Game():
                         if len(self.player_cards[j.id]) == 0:
                             es_gibt_einen_gewinner = True
                             winner = j
-                            print('Grandios, ' +str(j.name)+ ' ist toll')
+                            j.result(1)
+                          #  print('Grandios, ' +str(j.name)+ ' ist toll')
+                            for k in self.players:
+                                if k != j:
+                                    k.result(0)
 
-                    counter += 1
-                    if counter %100 == 0:
-                        print('Sie hätte '+str(counter)+' Karten gespielt')
+
         
                     if es_gibt_einen_gewinner:
                         break
 
-                    if counter >= 10000:
-                        es_gibt_einen_gewinner = True
+                counter += 1
+
+                if counter >= 10000:
+                    es_gibt_einen_gewinner = True
+
+            return counter
 
 
             """
@@ -167,6 +177,7 @@ class Player():
 class Playerbot(Player):
     def __init__(self,name):
         Player.__init__(self,name)
+        self.score = 0
     def handout(self,karten):
         self.karten = karten
 
@@ -187,8 +198,8 @@ class Playerbot(Player):
     def nehme(self,a):
         self.karten.append(a)
 
+    def result(self,s):
+        self.score += s
 
-player = [Playerbot(str(i)) for i in range(no_players)]
-tgame = Game(player)
-tgame.reset()
-history = tgame.play()
+    def reset(self):
+        self.score = 0
