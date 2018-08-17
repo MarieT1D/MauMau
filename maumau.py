@@ -100,9 +100,6 @@ class Game():
             while not(es_gibt_einen_gewinner):
 
 
-
-                print('runde')
-
                 for i in range(no_players):
 
                     answer = self.players[i].lege(gelegt[-no_players:])
@@ -178,26 +175,20 @@ class Playerbot(Player):
     def lege(self,gelegt):
 
 
-        print([i.farbe for i in self.karten])
-
-
         k=gelegt[-1]
+        f = 0
         for i in range(len(self.karten)):                
             if k.farbe==self.karten[i].farbe or k.zeichen == self.karten[i].zeichen:
                 f=self.karten[i]
-                self.karten.remove(f)
-                return f
-            else:
-                return 0
+        if f != 0:
+            self.karten.remove(f)
+        return f
 
     def nehme(self,a):
         self.karten.append(a)
 
 
-
-
-
 player = [Playerbot(str(i)) for i in range(no_players)]
 tgame = Game(player)
 tgame.reset()
-tgame.play()
+history = tgame.play()
