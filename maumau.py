@@ -30,6 +30,9 @@ pos_kartenfarben=dict(zip(pos_kartenfarbe_id,farbe))
 pos_kartennamen=dict(zip(karten_ids,[(j+"_"+i)for j in farbe 
                        for  i in wert]))
 
+no_players = 4
+no_cards = 5
+
 
 #stellt die farbe einer Karte fest
 #Trumpf 0,Eichel 1,Gras 2,Herz 3,Schelle 4
@@ -58,38 +61,143 @@ class Karte():
     
 class Game():
         players=4
-        def __init__(self, players=None):
-                assert players < 6
+        def __init__(self,players):
+                assert no_players < no_cards*no_players
                 self.kartensatz=[Karte(i) for i in karten_ids]
                 random.shuffle(self.kartensatz)
-                self.players=4
+               # self.players = no_players
+                self.players = players
+                self.player_cards = dict(zip([i.id for i in self.players],[]*no_players))
 
-                if players == None:
-                    self.players = 4
-                else:
-                    self.players = players
+
+        def reset(self):
+            random.shuffle(self.kartensatz)
+
+            for i in self.kartensatz:
+                i.loc = 'gespielt'
+
+            for i in range(no_players):
+                for j in range(no_cards):
+                    self.kartensatz[i*no_cards+j].loc = self.players[i].id
+                self.players[i].handout(self.kartensatz[i*no_cards:(i+1)*no_cards])
+
+
+        def check_karten(self):
+            player_ids = [i.id for i in self.players]
+            self.player_cards = dict(zip(player_ids,[[]for i in range(len(player_ids))]))
+            for i in self.kartensatz:
+                if i.loc in player_ids:
+                    self.player_cards[i.loc].append(i)
+
+
+        def play(self):
+
+            es_gibt_einen_gewinner = False
+            gelegt = self.kartensatz[no_players*no_cards:]
+
+            counter = 0
+
+            while not(es_gibt_einen_gewinner):
+
+
+
+                print('runde')
+
+                for i in range(no_players):
+
+                    answer = self.players[i].lege(gelegt[-no_players:])
+                    if answer != 0:
+                        assert answer.loc == self.players[i].id     #schaut ob er die Karte hat
+                        assert answer.farbe == gelegt[-1].farbe or answer.zeichen == gelegt[-1].zeichen
+                        answer.loc = 'gespielt'
+                        gelegt.append(answer)
+
+
+                    if answer == 0 and len(gelegt)>no_players:
+                        j = random.randint(0,len(gelegt)-no_players)
+                        gelegt[j].loc = self.players[i].id
+                        self.players[i].nehme(gelegt[j])
+                        gelegt.pop(j)
+                        answer = self.players[i].lege([gelegt[-1]])
+                        if answer !=0:
+                            answer.loc = 'gespielt'
+                            gelegt.append(answer)
+
+
+
+                    self.check_karten()
+                    for j in self.players:
+                        if len(self.player_cards[j.id]) == 0:
+                            es_gibt_einen_gewinner = True
+                            winner = j
+                            print('Grandios, ' +str(j.name)+ ' ist toll')
+
+                    counter += 1
+                    if counter %100 == 0:
+                        print('Sie hätte '+str(counter)+' Karten gespielt')
+        
+                    if es_gibt_einen_gewinner:
+                        break
+
+                    if counter >= 10000:
+                        es_gibt_einen_gewinner = True
+
+
+            """
+            TODO:
+            besondere Regeln (aussetzen)
+            """
+
+
+
                              
 class Player():
-    x=iter(list(range(Game.players)))
-    def __init__(self, name,game):
+    x=iter(list(range(no_players)))
+    def __init__(self, name):
                 self.name=name
                 self.id= next(self.x)
-                self.handout=game.kartensatz[(self.id*5):(self.id+1)*5]
+
     def get_kartenname(self):
-        a=[self.handout[i].name for i in range(len(self.handout))]
+        a=[self.karten[i].name for i in range(len(self.karten))]
         return a
 
     def get_kartenid(self):
-        a=[self.handout[i].id for i in range(len(self.handout))]
+        a=[self.karten[i].id for i in range(len(self.karten))]
         return a
 
+
+
 class Playerbot(Player):
-    def __init__(self,name,game):
-        Player.__init__(self,name,game)
-
-tgame = Game(4)
-p1=Player("Marie",tgame)
-
-print(p1.get_kartenname(),p1.get_kartenid())
+    def __init__(self,name):
+        Player.__init__(self,name)
+    def handout(self,karten):
+        self.karten = karten
 
 
+
+    def lege(self,gelegt):
+
+
+        print([i.farbe for i in self.karten])
+
+
+        k=gelegt[-1]
+        for i in range(len(self.karten)):                
+            if k.farbe==self.karten[i].farbe or k.zeichen == self.karten[i].zeichen:
+                f=self.karten[i]
+                self.karten.remove(f)
+                return f
+            else:
+                return 0
+
+    def nehme(self,a):
+        self.karten.append(a)
+
+
+
+
+
+player = [Playerbot(str(i)) for i in range(no_players)]
+tgame = Game(player)
+tgame.reset()
+tgame.play()
