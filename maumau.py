@@ -13,61 +13,63 @@ sau     17      27      37      47
 
 """
 import random
+
 #Mgliche Farben/Werte
 farbe=("Eichel", "Gras", "Herz", "Schelle")
 wert=("7","8","9","10","Unter","Ober","Koenig","Sau")
 
-#Darstellung im Bot
+#KartenIDs
 pos_kartenwert_id=[i for i in range(8)]
 pos_kartenfarbe_id=[(j+1)*10 for j in range(4)]
 
 karten_ids=[(i+j)for j in pos_kartenfarbe_id
         for  i in pos_kartenwert_id]
 
-#Dictionary Karte und Kartenname
-pos_kartenzeichen=dict(zip(pos_kartenwert_id,wert))
+#Dictionary KartenIDs und Kartenname
+pos_kartenwert=dict(zip(pos_kartenwert_id,wert))
 pos_kartenfarben=dict(zip(pos_kartenfarbe_id,farbe))
 pos_kartennamen=dict(zip(karten_ids,[(j+"_"+i)for j in farbe 
                        for  i in wert]))
-
-no_players = 4
-no_cards = 5
 
 
 #stellt die farbe einer Karte fest
 #Trumpf 0,Eichel 1,Gras 2,Herz 3,Schelle 4
 def get_farbe(karte):
     return pos_kartenfarben[(karte//10)*10]
-    
-def get_punkte(karte):
-    return punkt_wert[karte%10]
 
-def get_zeichen(karte):
-    return pos_kartenzeichen[karte%10]
-    
+
+def get_wert(karte):
+    return pos_kartenwert[karte%10]
+
+
+#Spieleinstellungen
+no_players = 4
+no_cards = 5
 
 class Karte():
     def __init__(self,id):
         
         self.id = id
         self.farbe   = get_farbe(id)
-        self.zeichen = get_zeichen(id) 
-        if self.zeichen== "7":
-                self.wert= "zwei_ziehen"
-        elif self.zeichen=="8":
-                self.wert= "aussetzen"
-        self.name    = str(self.farbe)+'_'+str(self.zeichen)
+        self.wert = get_wert(id) 
+        if self.wert== "7"
+                self.macht= "zwei_ziehen"
+        elif self.wert=="8":
+                self.macht= "aussetzen"
+        self.name    = str(self.farbe)+'_'+str(self.wert)
         self.loc     = 'None'
     
 class Game():
         players=4
         def __init__(self,players):
-                assert no_players < no_cards*no_players
+                assert no_players < no_cards/no_players
                 self.kartensatz=[Karte(i) for i in karten_ids]
                 random.shuffle(self.kartensatz)
                # self.players = no_players
+"""players ist int, keine Liste, wie kann folgendes entstehen, ohne vorher die Liste zu erstellen??"""
                 self.players = players
                 self.player_cards = dict(zip([i.id for i in self.players],[]*no_players))
+                self.reihenfolge = [i  for i in range(no_players)]
 
 
         def reset(self):
@@ -80,6 +82,8 @@ class Game():
                 for j in range(no_cards):
                     self.kartensatz[i*no_cards+j].loc = self.players[i].id
                 self.players[i].handout(self.kartensatz[i*no_cards:(i+1)*no_cards])
+
+            self.reihenfolge = [self.reihenfolge[-1]]+self.reihenfolge[:-1]
 
 
         def check_karten(self):
@@ -97,13 +101,11 @@ class Game():
 
             counter = 0
 
+
             while not(es_gibt_einen_gewinner):
 
 
-
-                print('runde')
-
-                for i in range(no_players):
+                for i in self.reihenfolge:
 
                     answer = self.players[i].lege(gelegt[-no_players:])
                     if answer != 0:
@@ -130,22 +132,30 @@ class Game():
                         if len(self.player_cards[j.id]) == 0:
                             es_gibt_einen_gewinner = True
                             winner = j
-                            print('Grandios, ' +str(j.name)+ ' ist toll')
+                            j.result(1)
+                          #  print('Grandios, ' +str(j.name)+ ' ist toll')
+                            for k in self.players:
+                                if k != j:
+                                    k.result(0)
 
-                    counter += 1
-                    if counter %100 == 0:
-                        print('Sie hätte '+str(counter)+' Karten gespielt')
+
         
                     if es_gibt_einen_gewinner:
                         break
 
-                    if counter >= 10000:
-                        es_gibt_einen_gewinner = True
+                counter += 1
+
+                if counter >= 10000:
+                    es_gibt_einen_gewinner = True
+
+            return counter
 
 
             """
             TODO:
-            besondere Regeln (aussetzen)
+            besondere Regeln (aussetzen); unnötiges Zeug rausschmeißen
+            player und no_players vereitlichen
+            player int oder liste (siehe Game.__init__ und Game.reset)
             """
 
 
@@ -170,6 +180,7 @@ class Player():
 class Playerbot(Player):
     def __init__(self,name):
         Player.__init__(self,name)
+        self.score = 0
     def handout(self,karten):
         self.karten = karten
 
@@ -178,26 +189,20 @@ class Playerbot(Player):
     def lege(self,gelegt):
 
 
-        print([i.farbe for i in self.karten])
-
-
         k=gelegt[-1]
+        f = 0
         for i in range(len(self.karten)):                
             if k.farbe==self.karten[i].farbe or k.zeichen == self.karten[i].zeichen:
                 f=self.karten[i]
-                self.karten.remove(f)
-                return f
-            else:
-                return 0
+        if f != 0:
+            self.karten.remove(f)
+        return f
 
     def nehme(self,a):
         self.karten.append(a)
 
+    def result(self,s):
+        self.score += s
 
-
-
-
-player = [Playerbot(str(i)) for i in range(no_players)]
-tgame = Game(player)
-tgame.reset()
-tgame.play()
+    def reset(self):
+        self.score = 0
