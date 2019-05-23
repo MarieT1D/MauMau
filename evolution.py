@@ -1,6 +1,7 @@
 import numpy as np
 import random
 from maumau import *
+from tkinter import *
 
 class Chobra(Player):
     def __init__(self,name,gamma):
@@ -30,7 +31,6 @@ class Chobra(Player):
             self.home_counsel_bias      += np.random.random(10)*self.gamma
             self.forgein_counsel        += np.random.random((10,no_players))*self.gamma
             self.forgein_counsel_bias   += np.random.random(10)*self.gamma
-
 
 
     def lege(self,gelegt):
@@ -76,6 +76,59 @@ class Chobra(Player):
         self.score += s
 
 
+
+class window():
+
+    def __init__(self,pop_size,cutoff):
+
+        self.height = 200
+        self.width  = 1500
+
+        self.master = Tk()
+        self.canvas = Canvas(self.master,height = self.height,width = self.width)
+        self.canvas.pack()
+
+        self.x_dis = 15
+        self.pop_size = pop_size
+        self.cutoff  = cutoff
+        self.y_dis = self.height//self.pop_size
+
+
+    def update(self,population):
+        self.canvas.delete(ALL)
+
+        for i in range(len(population)-1,-1,-1):
+
+            if i < self.cutoff:
+                color = '#FF0000'
+            else:
+                color = '#000000'
+
+            if len(population[i])>1:
+
+
+                coords = []
+                for j in range(len(population[i])):
+                    coords.append(j*self.x_dis)
+                    coords.append(population[i][j]*self.y_dis)
+
+                self.canvas.create_line(coords,width = 2,fill = color)
+            else:
+                self.canvas.create_oval(0,population[i][0]*self.y_dis-1,
+                                        2,population[i][0]*self.y_dis+1,
+                                        fill = color)
+
+
+        self.canvas.update()
+
+
+    def freeze(self):
+        self.master.mainloop()
+
+
+
+
+
 #Pretending to do Evolution
 def second(elem):
     return elem[1]
@@ -84,7 +137,9 @@ def second(elem):
 pop_size = 200
 no_rounds = 500
 no_generations = 200
-cutoff = 50
+cutoff = 30
+
+controll = window(pop_size,cutoff)
 
 
 population = [[i] for i in range(pop_size)]
@@ -119,22 +174,23 @@ for generation in range(no_generations):
         result[p_index+1][1] += Proto_Chobra2.score
 
         immediate_outcome = np.array([i.score for i in players])
-        print(np.round((immediate_outcome*100.0)/(no_rounds),3))
+        # print(np.round((immediate_outcome*100.0)/(no_rounds),3))
 
 
     #surviving the fittest
     result = sorted(result,key=second,reverse = True)
+
     population_ = population[:]
     for i in range(cutoff):
         population[i] = population_[result[i][0]]
     population_ = []
     for i in range(cutoff,pop_size):
-        population[i] = population[i%cutoff]+[i%cutoff]
+        population[i] = population[i%cutoff]+[i]
 
 
     print('--------------------- Finished '+str(generation)+'th Generation ----------------------')
-    print('\nThe best result has been: '+str(np.round((result[0][1]*100.0)/no_rounds))+'%')
 
+    for i in range(cutoff):
+        print(str(i)+': '+str(population[i][-20:])+'\t '+str(np.round((result[i][1]*100.0)/no_rounds))+'%')
 
-
-    
+    controll.update(population)

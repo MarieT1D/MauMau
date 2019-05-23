@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 import random
-from players import random_player
 
 colors = ['eichel', 'grass',
 		  'herz', 'schelle']
 numbers = ['7','8','9','10',
-		  'unter','ober','könig','ass']
+		  'Unter','Ober','König','Ass']
 
 def argmax(list):
 	max = list[0]
 	arg = 0
 	for i in range(len(list)):
-		if list[i] >= max:
+		if list[i] > max:
 			max = list[i]
 			arg = i
 	return arg
@@ -20,6 +19,7 @@ def argmax(list):
 class Card:
 	def __init__(self, id):
 
+		self.id = id
 		self.color_id = id//len(numbers)
 		self.number_id = id%len(numbers)
 
@@ -27,6 +27,9 @@ class Card:
 		self.number = numbers[self.number_id]
 
 		self.loc = 'pile'
+
+	def __lt__(self,other):
+		return self.number_id < other.number_id
 
 	def get_info(self):
 		print('color: '+self.color)
@@ -56,6 +59,7 @@ class Game:
 			i.loc = 'pile'
 
 		for i in range(self.no_players):
+			self.players[i].reset()
 			for card in range(i,len(self.card_register),
 							  self.no_players):
 				self.card_register[card].loc = i
@@ -65,11 +69,11 @@ class Game:
 		cards_on_the_table = []
 
 		for player in range(self.no_players):
-			played_card = self.players[player](self.player_cards[player],self.played_cards)
+			played_card = self.players[player].play(self.player_cards[player],cards_on_the_table)
 			played_card.loc = 'played'
 			self.played_cards.append(played_card)
 			self.player_cards[player].remove(played_card)
-			cards_on_the_table.append(played_card.number_id)
+			cards_on_the_table.append(played_card)
 
 			if self.talkative:
 				print('player'+str(player)+' played '+played_card.color+' '+played_card.number)
@@ -96,6 +100,3 @@ class Game:
 
 		return score_board
 
-if __name__ == '__main__':
-	G1 = Game([random_player]*4,talkative = True)
-	G1.handout()
